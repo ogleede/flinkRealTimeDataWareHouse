@@ -12,6 +12,7 @@
         <module>gmall-flink-cdc</module>
         <module>gmall-realtime</module>
         <module>gmall-logger</module>
+        <module>gmall-publisher</module>
     </modules>
 
     <properties>

@@ -3,5 +3,7 @@
   <component name="Encoding">
     <file url="file://$PROJECT_DIR$/gmall-flink/gmall-logger/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/gmall-flink/gmall-logger/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/gmall-flink/gmall-publisher/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/gmall-flink/gmall-publisher/src/main/resources" charset="UTF-8" />
   </component>
 </project>
