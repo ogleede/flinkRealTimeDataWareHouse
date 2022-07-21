@@ -14,8 +14,8 @@
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
-      <module name="gmall-flink" target="8" />
-      <module name="gmall-flink-cdc" target="8" />
+      <module name="gmall-flink" target="1.8" />
+      <module name="gmall-flink-cdc" target="1.8" />
       <module name="gmall-logger" target="1.8" />
       <module name="gmall-logger-bak" target="1.8" />
       <module name="gmall-publisher" target="1.8" />

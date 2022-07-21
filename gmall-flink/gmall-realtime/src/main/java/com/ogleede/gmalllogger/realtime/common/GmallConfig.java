@@ -2,7 +2,7 @@ package com.ogleede.gmalllogger.realtime.common;
 
 /**
  * @author Ogleede
- * @Description 常量类- HBase和Phoenix配置信息
+ * @Description HBase和Phoenix配置信息
  * @create 2022-06-03-14:02
  */
 public class GmallConfig {

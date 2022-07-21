@@ -24,17 +24,14 @@ public class ClickHouseUtil {
                 sql,
 
                 new JdbcStatementBuilder<T>() {
-                    /**
+                    /*
                      * 把 t 的值取出来，给preparedStatement的 ? 赋值
-                     * @param preparedStatement
-                     * @param t
-                     * @throws SQLException
                      */
                     @Override
                     public void accept(PreparedStatement preparedStatement, T t) throws SQLException {
-                        /**
-                         * getDeclaredFields() 返回全字段
-                         * getFields()         返回public字段
+                        /*
+                          getDeclaredFields() 返回全字段
+                          getFields()         返回public字段
                          */
                         try {
                             Field[] fields = t.getClass().getDeclaredFields();

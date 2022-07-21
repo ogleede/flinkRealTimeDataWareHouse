@@ -1,13 +1,13 @@
 <component name="libraryTable">
   <library name="Maven: org.scala-lang:scala-reflect:2.12.11">
     <CLASSES>
-      <root url="jar://$MAVEN_REPOSITORY$/org/scala-lang/scala-reflect/2.12.11/scala-reflect-2.12.11.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../../software/apache-maven-3.8.1-bin/apache-maven-3.8.1/maven-repo/org/scala-lang/scala-reflect/2.12.11/scala-reflect-2.12.11.jar!/" />
     </CLASSES>
     <JAVADOC>
-      <root url="jar://$MAVEN_REPOSITORY$/org/scala-lang/scala-reflect/2.12.11/scala-reflect-2.12.11-javadoc.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../../software/apache-maven-3.8.1-bin/apache-maven-3.8.1/maven-repo/org/scala-lang/scala-reflect/2.12.11/scala-reflect-2.12.11-javadoc.jar!/" />
     </JAVADOC>
     <SOURCES>
-      <root url="jar://$MAVEN_REPOSITORY$/org/scala-lang/scala-reflect/2.12.11/scala-reflect-2.12.11-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../../software/apache-maven-3.8.1-bin/apache-maven-3.8.1/maven-repo/org/scala-lang/scala-reflect/2.12.11/scala-reflect-2.12.11-sources.jar!/" />
     </SOURCES>
   </library>
 </component>
