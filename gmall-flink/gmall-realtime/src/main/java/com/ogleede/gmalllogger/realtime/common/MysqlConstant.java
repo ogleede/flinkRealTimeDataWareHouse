@@ -13,5 +13,9 @@ public class MysqlConstant {
     public static final String MYSQL_PASSWORD = "123123";
     public static final String FLINKCDC_DATABASE = "gmall-flink";
 
+    public static final String FLINKCDC_CONF_DATABASE = "gmall-realtime";
+
+    public static final String FLINKCDC_CONF_TABLE = "table_process";
+
     public static final String FLINKCDC_TABLE = "";
 }

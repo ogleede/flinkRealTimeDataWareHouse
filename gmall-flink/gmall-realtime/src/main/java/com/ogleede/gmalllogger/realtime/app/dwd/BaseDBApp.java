@@ -9,6 +9,7 @@ import com.ogleede.gmalllogger.realtime.app.function.CustomerDeserialization;
 import com.ogleede.gmalllogger.realtime.app.function.DimSinkFunction;
 import com.ogleede.gmalllogger.realtime.app.function.TableProcessFunction;
 import com.ogleede.gmalllogger.realtime.bean.TableProcess;
+import com.ogleede.gmalllogger.realtime.common.MysqlConstant;
 import com.ogleede.gmalllogger.realtime.utils.MyKafkaUtil;
 import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.api.common.state.MapStateDescriptor;
@@ -66,12 +67,12 @@ public class BaseDBApp {
 
         //TODO 4.使用FlinkCDC消费配置表，并处理成 广播流
         DebeziumSourceFunction<String> sourceFunction = MySQLSource.<String>builder()
-                .hostname("hadoop1")
-                .port(3306)
-                .username("root")
-                .password("123123")
-                .databaseList("gmall-realtime")//业务库不允许在运行时建表，创建新库。
-                .tableList("gmall-realtime.table_process")
+                .hostname(MysqlConstant.MYSQL_HOST)
+                .port(MysqlConstant.MYSQL_PORT)
+                .username(MysqlConstant.MYSQL_USERNAME)
+                .password(MysqlConstant.MYSQL_PASSWORD)
+                .databaseList(MysqlConstant.FLINKCDC_CONF_DATABASE)//业务库不允许在运行时建表，创建新库。
+                .tableList(MysqlConstant.FLINKCDC_CONF_DATABASE + "." + MysqlConstant.FLINKCDC_CONF_TABLE)
                 .startupOptions(StartupOptions.initial())
                 .deserializer(new CustomerDeserialization())
                 .build();
@@ -104,7 +105,7 @@ public class BaseDBApp {
             //过滤数据-sink columns
             //分流
 
-        //TODO 6.分流（分成kafka和Hbase）： 处理数据  广播流数据，主流数据（根据广播流数据进行处理）
+        //TODO 6.分流（分成kafka和HBase）： 处理数据  广播流数据，主流数据（根据广播流数据进行处理）
         //kafka主流 Hbase侧输出流
         OutputTag<JSONObject> hbaseTag = new OutputTag<JSONObject>("hbase-tag"){
         };
