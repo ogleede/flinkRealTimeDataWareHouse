@@ -19,12 +19,12 @@ import java.util.concurrent.ThreadPoolExecutor;
  * @Description 异步的方法去给维表查询，用线程池实现
  * @create 2022-06-27-20:57
  */
-public abstract class DimAsyncFunction<T> extends RichAsyncFunction<T, T> implements DimAsyncJoinFunction<T>{
+public abstract class AbstractDimAsyncFunction<T> extends RichAsyncFunction<T, T> implements DimAsyncJoinFunction<T>{
     private Connection connection;
     private ThreadPoolExecutor threadPoolExecutor;
     private String tableName;
 
-    public DimAsyncFunction(String tableName) {
+    public AbstractDimAsyncFunction(String tableName) {
         this.tableName = tableName;
     }
 

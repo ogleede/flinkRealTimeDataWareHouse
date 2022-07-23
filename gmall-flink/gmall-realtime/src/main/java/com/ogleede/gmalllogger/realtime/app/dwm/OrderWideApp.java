@@ -2,7 +2,7 @@ package com.ogleede.gmalllogger.realtime.app.dwm;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.ogleede.gmalllogger.realtime.app.function.DimAsyncFunction;
+import com.ogleede.gmalllogger.realtime.app.function.AbstractDimAsyncFunction;
 import com.ogleede.gmalllogger.realtime.bean.OrderDetail;
 import com.ogleede.gmalllogger.realtime.bean.OrderInfo;
 import com.ogleede.gmalllogger.realtime.bean.OrderWide;
@@ -110,7 +110,7 @@ public class OrderWideApp {
          */
         SingleOutputStreamOperator<OrderWide> orderWideWithUserDS = AsyncDataStream.unorderedWait(
                 orderWideWithoutDimDS,
-                new DimAsyncFunction<OrderWide>("DIM_USER_INFO") {
+                new AbstractDimAsyncFunction<OrderWide>("DIM_USER_INFO") {
                     @Override
                     public String getKey(OrderWide input) {
                         return input.getUser_id().toString();
@@ -139,7 +139,7 @@ public class OrderWideApp {
 //        orderWideWithUserDS.print("orderWideWithUserDS");
         //3.2 关联地区维度
         SingleOutputStreamOperator<OrderWide> orderWideWithProvinceDS = AsyncDataStream.unorderedWait(orderWideWithUserDS,
-                new DimAsyncFunction<OrderWide>("DIM_BASE_PROVINCE") {
+                new AbstractDimAsyncFunction<OrderWide>("DIM_BASE_PROVINCE") {
                     @Override
                     public String getKey(OrderWide input) {
                         return input.getProvince_id().toString();
@@ -159,7 +159,7 @@ public class OrderWideApp {
         //3.3 关联SKU维度,sku一定要在下面三个之前
         SingleOutputStreamOperator<OrderWide> orderWideWithSkuDS =
                 AsyncDataStream.unorderedWait(
-                        orderWideWithProvinceDS, new DimAsyncFunction<OrderWide>("DIM_SKU_INFO") {
+                        orderWideWithProvinceDS, new AbstractDimAsyncFunction<OrderWide>("DIM_SKU_INFO") {
                             @Override
                             public void join(OrderWide orderWide, JSONObject jsonObject) throws ParseException{
                                 orderWide.setSku_name(jsonObject.getString("SKU_NAME"));
@@ -175,7 +175,7 @@ public class OrderWideApp {
         //3.4 关联SPU维度
         SingleOutputStreamOperator<OrderWide> orderWideWithSpuDS =
                 AsyncDataStream.unorderedWait(
-                        orderWideWithSkuDS, new DimAsyncFunction<OrderWide>("DIM_SPU_INFO") {
+                        orderWideWithSkuDS, new AbstractDimAsyncFunction<OrderWide>("DIM_SPU_INFO") {
                             @Override
                             public void join(OrderWide orderWide, JSONObject jsonObject) throws ParseException{
                                 orderWide.setSpu_name(jsonObject.getString("SPU_NAME"));
@@ -188,7 +188,7 @@ public class OrderWideApp {
         //3.5 关联TM维度（品牌维度）
         SingleOutputStreamOperator<OrderWide> orderWideWithTmDS =
                 AsyncDataStream.unorderedWait(
-                        orderWideWithSpuDS, new DimAsyncFunction<OrderWide>("DIM_BASE_TRADEMARK")
+                        orderWideWithSpuDS, new AbstractDimAsyncFunction<OrderWide>("DIM_BASE_TRADEMARK")
                         {
                             @Override
                             public void join(OrderWide orderWide, JSONObject jsonObject) throws ParseException{
@@ -202,7 +202,7 @@ public class OrderWideApp {
         //3.6 关联Category维度（品类维度）
         SingleOutputStreamOperator<OrderWide> orderWideWithCategory3DS =
                 AsyncDataStream.unorderedWait(
-                        orderWideWithTmDS, new DimAsyncFunction<OrderWide>("DIM_BASE_CATEGORY3")
+                        orderWideWithTmDS, new AbstractDimAsyncFunction<OrderWide>("DIM_BASE_CATEGORY3")
                         {
                             @Override
                             public void join(OrderWide orderWide, JSONObject jsonObject) {
