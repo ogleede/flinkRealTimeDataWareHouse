@@ -158,7 +158,7 @@ public class SugarController {
         columnList.add(oldHeader);
         dataMap.put("columns", columnList);
 
-        //表格bady
+        //表格body
         List rowList = new ArrayList();
         //用户数
         Map userCount = new HashMap();

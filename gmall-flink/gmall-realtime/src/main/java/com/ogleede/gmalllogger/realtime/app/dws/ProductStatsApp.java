@@ -3,7 +3,7 @@ package com.ogleede.gmalllogger.realtime.app.dws;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.ogleede.gmalllogger.realtime.app.function.DimAsyncFunction;
+import com.ogleede.gmalllogger.realtime.app.function.AbstractDimAsyncFunction;
 import com.ogleede.gmalllogger.realtime.bean.OrderWide;
 import com.ogleede.gmalllogger.realtime.bean.PaymentWide;
 import com.ogleede.gmalllogger.realtime.bean.ProductStats;
@@ -316,7 +316,7 @@ public class ProductStatsApp {
         // 6.1 关联sku维度,要先关联sku维度
         SingleOutputStreamOperator<ProductStats> productStatsWithSkuDS = AsyncDataStream.unorderedWait(
                 reduceDS,
-                new DimAsyncFunction<ProductStats>("DIM_SKU_INFO") {
+                new AbstractDimAsyncFunction<ProductStats>("DIM_SKU_INFO") {
                     @Override
                     public String getKey(ProductStats input) {
                         return input.getSku_id().toString();
@@ -340,7 +340,7 @@ public class ProductStatsApp {
         // 6.2 关联spu维度
         SingleOutputStreamOperator<ProductStats> productStatsWithSpuDS = AsyncDataStream.unorderedWait(
                 productStatsWithSkuDS,
-                new DimAsyncFunction<ProductStats>("DIM_SPU_INFO") {
+                new AbstractDimAsyncFunction<ProductStats>("DIM_SPU_INFO") {
                     @Override
                     public String getKey(ProductStats input) {
                         return String.valueOf(input.getSpu_id());
@@ -357,7 +357,7 @@ public class ProductStatsApp {
         // 6.3 关联TradeMark维度
         SingleOutputStreamOperator<ProductStats> productStatsWithTmDS = AsyncDataStream.unorderedWait(
                 productStatsWithSpuDS,
-                new DimAsyncFunction<ProductStats>("DIM_BASE_TRADEMARK") {
+                new AbstractDimAsyncFunction<ProductStats>("DIM_BASE_TRADEMARK") {
                     @Override
                     public String getKey(ProductStats input) {
                         return String.valueOf(input.getTm_id());
@@ -374,7 +374,7 @@ public class ProductStatsApp {
         // 6.4 关联Category维度
         SingleOutputStreamOperator<ProductStats> productStatsWithCategory3DS = AsyncDataStream.unorderedWait(
                 productStatsWithTmDS,
-                new DimAsyncFunction<ProductStats>("DIM_BASE_CATEGORY3") {
+                new AbstractDimAsyncFunction<ProductStats>("DIM_BASE_CATEGORY3") {
                     @Override
                     public String getKey(ProductStats input) {
                         return String.valueOf(input.getTm_id());

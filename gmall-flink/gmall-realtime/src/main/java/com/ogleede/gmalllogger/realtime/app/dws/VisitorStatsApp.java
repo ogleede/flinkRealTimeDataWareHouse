@@ -145,7 +145,7 @@ public class VisitorStatsApp {
 
         //TODO 6 开窗聚合，10s滚动窗口(大屏刷新间隔是10s)
         WindowedStream<VisitorStats, Tuple4<String, String, String, String>, TimeWindow> windowDS = keyedDS.window(TumblingEventTimeWindows.of(Time.seconds(10)));
-        /**
+        /*
          * 要拿到窗口信息，不需用process，window里面的apply也有窗口信息
          * 如果只用reduce做增量聚合是不能利用窗口信息全量聚合的
          * reduce里面可以再传入一个windowFunction，增量聚合时走reduceFunction，最后窗口输出时，将聚合结果给到windowFunction
@@ -154,9 +154,10 @@ public class VisitorStatsApp {
         SingleOutputStreamOperator<VisitorStats> result = windowDS.reduce(new ReduceFunction<VisitorStats>() {
             @Override
             public VisitorStats reduce(VisitorStats value1, VisitorStats value2) throws Exception {
-                /**
+                /*
                  * 这里选择的是滚动窗口，可以在value1中set新值，返回value1
                  * 如果是滑动窗口，只能new新对象赋值，因为当前对象会被其他窗口利用
+                 * 正因为用的是滚动窗口，所以ts字段用的value1的
                  */
 //                return new VisitorStats(value1.getStt(), value1.getEdt(),
 //                        value1.getVc(),value1.getCh(),value1.getAr(),value1.getIs_new(),
@@ -190,7 +191,7 @@ public class VisitorStatsApp {
         //TODO 7 将数据写入ClickHouse
         //打印测试
         result.print(">>>>>>>>>>>>>>>");
-        /**
+        /*
          * Phoenix 也可以用JDBC方式，但是每个表不一样，表的字段不同，不好指定，所以不用JDBC方式
          * 在向ClickHouse时，可以，result相当于一张表。
          * 当Bean字段顺序和表字段顺序一致时，sql可以不写字段顺序
