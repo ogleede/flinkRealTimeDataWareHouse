@@ -22,7 +22,7 @@ import org.apache.flink.util.Collector;
 import java.time.Duration;
 import java.util.Date;
 
-//数据流：web/app -> nginx 发送请求-> spring boot 将数据发送到-> kafka(ods) -> flink 消费ods写入 -> kafka(dwd) ->FlinkApp ->kafka(dwm)
+//数据流：web/app -> nginx 发送请求-> spring boot 将数据发送到-> kafka(ods) -> flink 消费ods写入 -> kafka(dwd) ->FlinkApp ->kafka(dwd)
 // -> FlinkApp -> ClickHouse
 //程序 : mocklog -> nginx        -> Logger.sh             ->  kafka(zk)  -> BaseLogApp     -> kafka    -> uv/uj -> kafka
 // -> VisitorStatsApp -> ClickHouse
@@ -42,7 +42,6 @@ public class VisitorStatsApp {
     public static void main(String[] args) throws Exception {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setParallelism(1);
-        //TODO:这里如果不注释掉会报错，待解决,问题出现在H状态后端这里要访问HDFS，但是权限不够。之后集群运行时再解决。
         //1.1开启checkpoint 并指定状态后端为FS
 //        env.setStateBackend(new FsStateBackend("hdfs://hadoop1:8020/gmall-flink/checkpoint"));
 //        env.enableCheckpointing(5000L);
@@ -51,17 +50,17 @@ public class VisitorStatsApp {
 //        env.getCheckpointConfig().setMaxConcurrentCheckpoints(2);
 //        env.getCheckpointConfig().setMinPauseBetweenCheckpoints(3000);
 
-        //TODO 1 读取kafka数据，创建流。分别是kafka中的pv、uv、跳转明细主题
+        //DONE 1 读取kafka数据，创建流。分别是kafka中的pv、uv、跳转明细主题
         String groupId = "visitor_stats_app";
 
         String pageViewSourceTopic = "dwd_page_log";
-        String uniqueVisitSourceTopic = "dwm_unique_visit";
-        String userJumpDetailSourceTopic = "dwm_user_jump_detail";
+        String uniqueVisitSourceTopic = "dwd_unique_visit";
+        String userJumpDetailSourceTopic = "dwd_user_jump_detail";
 
         DataStreamSource<String> uvDS = env.addSource(MyKafkaUtil.getKafkaConsumer(uniqueVisitSourceTopic, groupId));
         DataStreamSource<String> ujDS = env.addSource(MyKafkaUtil.getKafkaConsumer(userJumpDetailSourceTopic, groupId));
         DataStreamSource<String> pvDS = env.addSource(MyKafkaUtil.getKafkaConsumer(pageViewSourceTopic, groupId));
-        //TODO 2 将每个流处理成相同的数据类型
+        //DONE 2 将每个流处理成相同的数据类型
         //处理UV数据
         SingleOutputStreamOperator<VisitorStats> visitorStatsWithUvDS = uvDS.map(line -> {
 
@@ -123,14 +122,14 @@ public class VisitorStatsApp {
                     jsonObject.getLong("ts"));
         });
 
-        //TODO 3 Union几个流
+        //DONE 3 Union几个流
         DataStream<VisitorStats> unionDS = visitorStatsWithUvDS.union(visitorStatsWithUJDS, visitorStatsWithPVDS);
 
-        //TODO 4 提取时间戳生成WM
+        //DONE 4 提取时间戳生成WM
         SingleOutputStreamOperator<VisitorStats> visitorStatsWithWM = unionDS.assignTimestampsAndWatermarks(WatermarkStrategy.<VisitorStats>forBoundedOutOfOrderness(Duration.ofSeconds(11))
                 .withTimestampAssigner((element, recordTimestamp) -> element.getTs()));
 
-        //TODO 5 按照维度信息分组
+        //DONE 5 按照维度信息分组
         KeyedStream<VisitorStats, Tuple4<String, String, String, String>> keyedDS = visitorStatsWithWM.keyBy(new KeySelector<VisitorStats, Tuple4<String, String, String, String>>() {
             @Override
             public Tuple4<String, String, String, String> getKey(VisitorStats value) throws Exception {
@@ -143,7 +142,7 @@ public class VisitorStatsApp {
             }
         });
 
-        //TODO 6 开窗聚合，10s滚动窗口(大屏刷新间隔是10s)
+        //DONE 6 开窗聚合，10s滚动窗口(大屏刷新间隔是10s)
         WindowedStream<VisitorStats, Tuple4<String, String, String, String>, TimeWindow> windowDS = keyedDS.window(TumblingEventTimeWindows.of(Time.seconds(10)));
         /*
          * 要拿到窗口信息，不需用process，window里面的apply也有窗口信息
@@ -188,7 +187,7 @@ public class VisitorStatsApp {
             }
         });
 
-        //TODO 7 将数据写入ClickHouse
+        //DONE 7 将数据写入ClickHouse
         //打印测试
         result.print(">>>>>>>>>>>>>>>");
         /*

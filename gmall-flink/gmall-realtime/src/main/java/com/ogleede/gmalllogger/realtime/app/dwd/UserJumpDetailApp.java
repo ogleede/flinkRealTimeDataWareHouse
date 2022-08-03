@@ -1,4 +1,4 @@
-package com.ogleede.gmalllogger.realtime.app.dwm;
+package com.ogleede.gmalllogger.realtime.app.dwd;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONAware;
@@ -25,13 +25,13 @@ import java.util.Map;
 
 /**
  * @author Ogleede
- * @Description //数据流：web/app -> nginx 发送请求-> spring boot 将数据发送到-> kafka(ods) -> flink 消费ods写入 -> kafka(dwd) -> flinkapp -> kafka(dwm)
+ * @Description //数据流：web/app -> nginx 发送请求-> spring boot 将数据发送到-> kafka(ods) -> flink 消费ods写入 -> kafka(dwd) -> flinkapp -> kafka(dwd)
  * //程序 : mocklog -> nginx        -> Logger.sh             ->  kafka(zk)  -> BaseLogApp     -> kafka      ->UserJumpDetailApp -> kafka
  * @create 2022-06-05-15:23
  */
 public class UserJumpDetailApp {
     public static void main(String[] args) throws Exception {
-        //TODO 1.获取执行环境
+        //DONE 1.获取执行环境
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setParallelism(1);//生产环境，与Kafka分区数保持一致
 
@@ -44,19 +44,19 @@ public class UserJumpDetailApp {
         //env.getCheckpointConfig().setMinPauseBetweenCheckpoints(3000);
         //env.setRestartStrategy(RestartStrategies.fixedDelayRestart());
 
-        //TODO 2.读取kafka dwd_page_log主题的数据
+        //DONE 2.读取kafka dwd_page_log主题的数据
         String groupId = "unique_visit_app";
         String sourceTopic = "dwd_page_log";
-        String sinkTopic = "dwm_user_jump_detail";
+        String sinkTopic = "dwd_user_jump_detail";
         DataStreamSource<String> kafkaDS = env.addSource(MyKafkaUtil.getKafkaConsumer(sourceTopic, groupId));
 
-        //TODO 3. 将每行数据转换为JSON对象,并提取时间戳，创建watermark
+        //DONE 3. 将每行数据转换为JSON对象,并提取时间戳，创建watermark
         SingleOutputStreamOperator<JSONObject> jsonDS = kafkaDS
                 .map(JSON::parseObject)
                 .assignTimestampsAndWatermarks(WatermarkStrategy.<JSONObject>forBoundedOutOfOrderness(Duration.ofSeconds(1))
                         .withTimestampAssigner((element, recordTimestamp) -> element.getLong("ts")));
 
-        //TODO 4. CEP 定义模式序列（关键）
+        //DONE 4. CEP 定义模式序列（关键）
         Pattern<JSONObject, JSONObject> pattern = Pattern.<JSONObject>begin("start").where(new SimpleCondition<JSONObject>() {
             @Override
             public boolean filter(JSONObject value) throws Exception {
@@ -71,7 +71,7 @@ public class UserJumpDetailApp {
             }
         }).within(Time.seconds(10));
 
-        // TODO 使用循环模式定义模式序列
+        // DONE 使用循环模式定义模式序列
 //        Pattern<JSONObject, JSONObject> pattern = Pattern.<JSONObject>begin("start").where(new SimpleCondition<JSONObject>() {
 //            @Override
 //            public boolean filter(JSONObject value) throws Exception {
@@ -82,10 +82,10 @@ public class UserJumpDetailApp {
 //                .consecutive()
 //                .within(Time.seconds(10));
 
-        //TODO 5. CEP 将模式序列作用到流上
+        //DONE 5. CEP 将模式序列作用到流上
         PatternStream<JSONObject> patternStream = CEP.pattern(jsonDS.keyBy(json -> json.getJSONObject("common").getString("mid")), pattern);
 
-        //TODO 6. CEP 提取匹配上的和超时事件
+        //DONE 6. CEP 提取匹配上的和超时事件
         OutputTag<JSONObject> timeOutTag = new OutputTag<JSONObject>("time-out") {
         };
         SingleOutputStreamOperator<JSONObject> selectDS = patternStream.select(timeOutTag,
@@ -104,15 +104,15 @@ public class UserJumpDetailApp {
 
         DataStream<JSONObject> timeOutDS = selectDS.getSideOutput(timeOutTag);
 
-        //TODO 7. UNION两种事件
+        //DONE 7. UNION两种事件
         DataStream<JSONObject> unionDS = selectDS.union(timeOutDS);
 
-        //TODO 8. 将事件写入Kafka
+        //DONE 8. 将事件写入Kafka
         unionDS.print();
         unionDS.map(JSONAware::toJSONString)
                 .addSink(MyKafkaUtil.getKafkaProducer(sinkTopic));
 
-        //TODO 9. 启动任务
+        //DONE 9. 启动任务
         env.execute("UserJumpDetailApp");
     }
 }

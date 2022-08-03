@@ -20,7 +20,7 @@ import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
  * @create 2022-07-03-20:39
  */
 //数据流： web/app->nginx->SpringBoot->mysql->FlinkApp->Kafka(ods)->FlinkApp->
-// Kafka/HBase(dwd/dim)        ->FlinkApp      ->Kafka(dwm) -> FlinkAPP -> ClickHouse
+// Kafka/HBase(dwd/dim)        ->FlinkApp      ->Kafka(dwd) -> FlinkAPP -> ClickHouse
 //程序：   mockDb                    ->mysql->FlinkApp->Kafka(zk)-> BaseDBApp->
 //kafka/phoenix(zk,hdfs,hbase) -> OrderWideApp -> kafka    -> ProvinceStatsSQLApp -> ClickHouse
 
@@ -32,7 +32,7 @@ import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 public class ProvinceStatsSQLApp {
     public static void main(String[] args) throws Exception {
 
-        // TODO 1 获取执行环境、获取表的执行环境
+        // DONE 1 获取执行环境、获取表的执行环境
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setParallelism(1);
 
@@ -45,7 +45,7 @@ public class ProvinceStatsSQLApp {
 //        env.getCheckpointConfig().setCheckpointTimeout(10000L);
 //        env.getCheckpointConfig().setMaxConcurrentCheckpoints(2);
 //        env.getCheckpointConfig().setMinPauseBetweenCheckpoints(3000);
-        // TODO 2 使用DDL创建表 提取时间戳，生成WM
+        // DONE 2 使用DDL创建表 提取时间戳，生成WM
         String sourceTopic = "dwm_order_wide";
         String groupId = "province_stats";
 
@@ -65,7 +65,7 @@ public class ProvinceStatsSQLApp {
                 MyKafkaUtil.getKafkaDDL(sourceTopic, groupId) + " )");
 
 
-        // TODO 3 查询数据  分组、开窗、聚合
+        // DONE 3 查询数据  分组、开窗、聚合
         Table table = tableEnv.sqlQuery(
                 "select " +
                         "DATE_FORMAT(TUMBLE_START(rt, INTERVAL '10' SECOND),'yyyy-MM-dd HH:mm:ss') stt, " +
@@ -88,14 +88,14 @@ public class ProvinceStatsSQLApp {
                         "province_iso_code, " +
                         "province_3166_2_code");
 
-        // TODO 4 将动态表转换为流
+        // DONE 4 将动态表转换为流
         /**
          * 仅追加流：
          * 撤回流 ：
          */
         DataStream<ProvinceStats> productStatsDS = tableEnv.toAppendStream(table, ProvinceStats.class);
 
-        // TODO 5 写入ClickHouse
+        // DONE 5 写入ClickHouse
         /**
          * 如果是Flink官方支持的数据库，也可以直接把目标数据表定义为动态表，用insert into写入。
          * 而ClickHouse目前官方没有支持的jdbc连接器（目前支持Mysql、 PostgreSQL、Derby）。

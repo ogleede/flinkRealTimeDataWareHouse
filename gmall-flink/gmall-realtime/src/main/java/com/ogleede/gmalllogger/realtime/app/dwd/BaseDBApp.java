@@ -36,10 +36,10 @@ import javax.annotation.Nullable;
  */
 public class BaseDBApp {
     public static void main(String[] args) throws Exception {
-        //TODO 1.获取执行环境
+        //DONE 1.获取执行环境
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setParallelism(1);
-        //TODO:这里如果不注释掉会报错，待解决,问题出现在H状态后端这里要访问HDFS，但是权限不够。之后集群运行时再解决。
+
         //1.1开启checkpoint 并指定状态后端为FS
 //        env.setStateBackend(new FsStateBackend("hdfs://hadoop1:8020/gmall-flink/checkpoint"));
 //        env.enableCheckpointing(5000L);
@@ -48,12 +48,12 @@ public class BaseDBApp {
 //        env.getCheckpointConfig().setMaxConcurrentCheckpoints(2);
 //        env.getCheckpointConfig().setMinPauseBetweenCheckpoints(3000);
 
-        //TODO 2.消费kafka ods_base_db 主题数据创建流
+        //DONE 2.消费kafka ods_base_db 主题数据创建流
         String sourceTopic = "ods_base_db";
         String groupId = "base_db_app";
         DataStreamSource<String> kafkaDS = env.addSource(MyKafkaUtil.getKafkaConsumer(sourceTopic, groupId));
 
-        //TODO 3.将每行数据转换为JSON对象并过滤(delete)   主流
+        //DONE 3.将每行数据转换为JSON对象并过滤(delete)   主流
         //业务数据一般无脏数据
         SingleOutputStreamOperator<JSONObject> jsonObjDS = kafkaDS.map(line -> JSON.parseObject(line))
                 .filter(new FilterFunction<JSONObject>() {
@@ -65,7 +65,7 @@ public class BaseDBApp {
                     }
                 });
 
-        //TODO 4.使用FlinkCDC消费配置表，并处理成 广播流
+        //DONE 4.使用FlinkCDC消费配置表，并处理成 广播流
         DebeziumSourceFunction<String> sourceFunction = MySQLSource.<String>builder()
                 .hostname(MysqlConstant.MYSQL_HOST)
                 .port(MysqlConstant.MYSQL_PORT)
@@ -93,7 +93,7 @@ public class BaseDBApp {
         BroadcastStream<String> broadcastStream = tableProcessStrDS.broadcast(mapStateDescriptor);
 
 
-        //TODO 5.连接主流和广播流
+        //DONE 5.连接主流和广播流
         BroadcastConnectedStream<JSONObject, String> connectedStream = jsonObjDS.connect(broadcastStream);
 
         //广播流：
@@ -105,17 +105,17 @@ public class BaseDBApp {
             //过滤数据-sink columns
             //分流
 
-        //TODO 6.分流（分成kafka和HBase）： 处理数据  广播流数据，主流数据（根据广播流数据进行处理）
+        //DONE 6.分流（分成kafka和HBase）： 处理数据  广播流数据，主流数据（根据广播流数据进行处理）
         //kafka主流 Hbase侧输出流
         OutputTag<JSONObject> hbaseTag = new OutputTag<JSONObject>("hbase-tag"){
         };
         SingleOutputStreamOperator<JSONObject> kafka = connectedStream.process(new TableProcessFunction(hbaseTag, mapStateDescriptor));
 
-        //TODO 7.提取kafka流数据和HBase流数据
+        //DONE 7.提取kafka流数据和HBase流数据
         DataStream<JSONObject> hbase = kafka.getSideOutput(hbaseTag);
 
 
-        //TODO 8.将kafka数据写入kafka主题，将HBase数据写入phoenix表
+        //DONE 8.将kafka数据写入kafka主题，将HBase数据写入phoenix表
         kafka.print("kafka>>>>>>>>>>");
         hbase.print("hbase>>>>>>>>>>");
 
@@ -132,7 +132,7 @@ public class BaseDBApp {
             }
         }));
 
-        //TODO 9.启动任务
+        //DONE 9.启动任务
         env.execute("BaseDBApp");
     }
 }

@@ -1,4 +1,4 @@
-package com.ogleede.gmalllogger.realtime.app.dwm;
+package com.ogleede.gmalllogger.realtime.app.dwd;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
@@ -20,7 +20,7 @@ import java.text.SimpleDateFormat;
 import java.util.concurrent.TimeUnit;
 
 //数据流： web/app->nginx->SpringBoot->mysql->FlinkApp->Kafka(ods)->FlinkApp->
-// Kafka/HBase(dwd/dim)        ->FlinkApp      ->Kafka(dwm)
+// Kafka/HBase(dwd/dim)        ->FlinkApp      ->Kafka(dwd)
 //程序：   mockDb                    ->mysql->FlinkApp->Kafka(zk)-> BaseDBApp->
 //kafka/phoenix(zk,hdfs,hbase) -> OrderWideApp -> kafka
 /**
@@ -41,11 +41,11 @@ public class OrderWideApp {
         //env.getCheckpointConfig().setMinPauseBetweenCheckpoints(3000);
         //env.setRestartStrategy(RestartStrategies.fixedDelayRestart());
 
-        //TODO 1. 读取Kafka主题的数据 dwd_order_info dwd_order_detail,转换为JavaBean对象&提取时间戳生成WM
+        //DONE 1. 读取Kafka主题的数据 dwd_order_info dwd_order_detail,转换为JavaBean对象&提取时间戳生成WM
 
         String orderInfoSourceTopic = "dwd_order_info";
         String orderDetailSourceTopic = "dwd_order_detail";
-        String orderWideSinkTopic = "dwm_order_wide";
+        String orderWideSinkTopic = "dwd_order_wide";
         String groupId = "order_wide_group_test";
 
         SingleOutputStreamOperator<OrderInfo> orderInfoDS = env.addSource(MyKafkaUtil.getKafkaConsumer(orderInfoSourceTopic, groupId))
@@ -76,7 +76,7 @@ public class OrderWideApp {
                 }).assignTimestampsAndWatermarks(WatermarkStrategy.<OrderDetail>forMonotonousTimestamps()
                         .withTimestampAssigner((element, recordTimestamp) -> element.getCreate_ts()));
 
-        //TODO 2. 双流join
+        //DONE 2. 双流join
         SingleOutputStreamOperator<OrderWide> orderWideWithoutDimDS = orderInfoDS.keyBy(OrderInfo::getId)
                 .intervalJoin(orderDetailDS.keyBy(OrderDetail::getOrder_id))
                 .between(Time.seconds(-5), Time.seconds(5))//生产环境中，这里的时间给的是最大延迟时间，不会丢数据
@@ -93,7 +93,7 @@ public class OrderWideApp {
         //当多对N时，多有分区（keyBy），N也有分区（keyBy），最后的结果数量是，多的分区分别占有N的每个key。结果相加还是N。
         //上述前提是时间生成较短，全部被interval抓住的情况。
 
-        //TODO 3. 关联维表*** （维度信息在Phoenix中，要用map方法去查询）
+        //DONE 3. 关联维表*** （维度信息在Phoenix中，要用map方法去查询）
 //        orderWideWithoutDimDS.map(orderWide -> {
 //            //关联用户维度
 //
@@ -216,7 +216,7 @@ public class OrderWideApp {
         //打印测试
         orderWideWithCategory3DS.print("orderWideWithCategory3DS>>>>>>>");
 
-        //TODO 4. 将数据写入Kafka
+        //DONE 4. 将数据写入Kafka
         orderWideWithCategory3DS
                 .map(JSONObject::toJSONString)
                 .addSink(MyKafkaUtil.getKafkaProducer(orderWideSinkTopic));

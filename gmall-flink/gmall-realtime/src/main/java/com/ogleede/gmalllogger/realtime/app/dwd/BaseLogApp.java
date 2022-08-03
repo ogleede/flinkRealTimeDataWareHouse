@@ -21,10 +21,10 @@ import org.apache.flink.util.OutputTag;
 
 public class BaseLogApp {
     public static void main(String[] args) throws Exception {
-        //TODO 1.获取执行环境
+        //DONE 1.获取执行环境
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setParallelism(1);
-        //TODO:这里如果不注释掉会报错，待解决,问题出现在H状态后端这里要访问HDFS，但是权限不够。之后集群运行时再解决。
+
         //1.1开启checkpoint 并指定状态后端为FS
 //        env.setStateBackend(new FsStateBackend("hdfs://hadoop1:8020/gmall-flink/checkpoint"));
 //        env.enableCheckpointing(5000L);
@@ -34,12 +34,12 @@ public class BaseLogApp {
 //        env.getCheckpointConfig().setMinPauseBetweenCheckpoints(3000);
 
 
-        //TODO 2.消费 ods_base_log 主题数据 创建流
+        //DONE 2.消费 ods_base_log 主题数据 创建流
         String sourceTopic = "ods_base_log";
         String groupId = "base_log_app";
         DataStreamSource<String> kafkaDS = env.addSource(MyKafkaUtil.getKafkaConsumer(sourceTopic, groupId));
 
-        //TODO 3.将每行数据转换为JSON对象
+        //DONE 3.将每行数据转换为JSON对象
 //        kafkaDS.map(line -> {//如果用map方法，无法处理脏数据，比如字符串最后少了个大括号
 //            return JSON.parseObject(line);
 //        });
@@ -61,7 +61,7 @@ public class BaseLogApp {
         //打印脏数据
         jsonObjDS.getSideOutput(dirtyOutputTag).print("dirty>>>>>>>>>>>");
 
-        //TODO 4.新老用户校验  状态编程
+        //DONE 4.新老用户校验  状态编程
         SingleOutputStreamOperator<JSONObject> jsonObjWithNewFlagDS = jsonObjDS.keyBy(jsonObj -> jsonObj.getJSONObject("common").getString("mid"))
                 .map(new RichMapFunction<JSONObject, JSONObject>() {
                     private ValueState<String> valueState;
@@ -91,7 +91,7 @@ public class BaseLogApp {
                     }
                 });
 
-        //TODO 5.分流 测输出流  页面：主流   启动：侧输出流  曝光：侧输出流
+        //DONE 5.分流 测输出流  页面：主流   启动：侧输出流  曝光：侧输出流
         //侧输出流->只能用process
         //分流写入kafka
 
@@ -130,11 +130,11 @@ public class BaseLogApp {
         });
 
 
-        //TODO 6.提取侧输出流
+        //DONE 6.提取侧输出流
         DataStream<String> startDS = pageDS.getSideOutput(startOutputTag);
         DataStream<String> displayDS = pageDS.getSideOutput(displayOutputTag);
 
-        //TODO 7.将三个流进行打印并输入到对应的kafka主题中
+        //DONE 7.将三个流进行打印并输入到对应的kafka主题中
         startDS.print("start>>>>>>>>>>>>>");
         pageDS.print("page>>>>>>>>>>>>>>>");
         displayDS.print("display>>>>>>>>>>>>>");
@@ -148,7 +148,7 @@ public class BaseLogApp {
         //bin/kafka-console-consumer.sh --bootstrap-server hadoop1:9092 --topic dwd_page_log
         //bin/kafka-console-consumer.sh --bootstrap-server hadoop1:9092 --topic dwd_display_log
 
-        //TODO 8.启动任务
+        //DONE 8.启动任务
         env.execute("BaseLogApp");
     }
 }

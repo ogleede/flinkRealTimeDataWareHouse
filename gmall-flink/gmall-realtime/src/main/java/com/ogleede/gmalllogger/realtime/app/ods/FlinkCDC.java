@@ -14,7 +14,7 @@ public class FlinkCDC {
         //1.获取执行环境
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setParallelism(1);
-        //TODO:这里如果不注释掉会报错，待解决,问题出现在H状态后端这里要访问HDFS，但是权限不够。之后集群运行时再解决。
+
         //1.1开启checkpoint 并指定状态后端为FS
 //        env.setStateBackend(new FsStateBackend("hdfs://hadoop1:8020/gmall-flink/checkpoint"));
 //        env.enableCheckpointing(5000L);

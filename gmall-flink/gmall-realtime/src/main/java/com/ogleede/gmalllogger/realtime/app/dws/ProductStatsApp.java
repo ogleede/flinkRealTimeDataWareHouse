@@ -48,7 +48,7 @@ import java.util.concurrent.TimeUnit;
 // app/web->nginx->SpringBoot->kafka(ods)->BaseLogApp->kafka(dwd)->ProductStatsApp->ClickHouse
 
 // app/web->nginx->SpringBoot->MySQL->FlinkCDC->kafka(ods)->BaseDBApp->kafka(dwd)/phoenix(dim)
-// ->OrderWideApp/PaymentWideApp->kafka(dwm)->ProductStatsApp->ClickHouse
+// ->OrderWideApp/PaymentWideApp->kafka(dwd)->ProductStatsApp->ClickHouse
 // 程序：省略FlinkApp，除了pv/uv/VisitorStatsApp都开
 // mock->nginx->logger.sh->kafka(zk)/Phoenix(/zk/HDFS/HBase)->ClickHouse
 
@@ -59,7 +59,7 @@ public class ProductStatsApp {
     public static void main(String[] args) throws Exception {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setParallelism(1);
-        //TODO:这里如果不注释掉会报错，待解决,问题出现在H状态后端这里要访问HDFS，但是权限不够。之后集群运行时再解决。
+
         //1.1开启checkpoint 并指定状态后端为FS
 //        env.setStateBackend(new FsStateBackend("hdfs://hadoop1:8020/gmall-flink/checkpoint"));
 //        env.enableCheckpointing(5000L);
@@ -68,14 +68,14 @@ public class ProductStatsApp {
 //        env.getCheckpointConfig().setMaxConcurrentCheckpoints(2);
 //        env.getCheckpointConfig().setMinPauseBetweenCheckpoints(3000);
 
-        // TODO 1 读取Kafka 7个主题 的数据创建流
+        // DONE 1 读取Kafka 7个主题 的数据创建流
         String groupId = "product_stats_app";
 
         String pageViewSourceTopic = "dwd_page_log";
         String favorInfoSourceTopic = "dwd_favor_info";
         String cartInfoSourceTopic = "dwd_cart_info";
-        String orderWideSourceTopic = "dwm_order_wide";
-        String paymentWideSourceTopic = "dwm_payment_wide";
+        String orderWideSourceTopic = "dwd_order_wide";
+        String paymentWideSourceTopic = "dwd_payment_wide";
         String refundInfoSourceTopic = "dwd_order_refund_info";
         String commentInfoSourceTopic = "dwd_comment_info";
 
@@ -94,7 +94,7 @@ public class ProductStatsApp {
         //comment流 -> 评价
         DataStreamSource<String> commentDS = env.addSource(MyKafkaUtil.getKafkaConsumer(commentInfoSourceTopic, groupId));
 
-        // TODO 2 将7个流统一数据格式
+        // DONE 2 将7个流统一数据格式
         /**
          * 点击和曝光数据来自于dwd层，日志
          * 读进pv一条数据，写出多条(点击+曝光)。用flatMap
@@ -247,7 +247,7 @@ public class ProductStatsApp {
                     .build();
         });
 
-        // TODO 3 Union 7个流
+        // DONE 3 Union 7个流
         DataStream<ProductStats> unionDS = productStatsWithClickAndDisplayDS.union(
                 productStatsWithFavorDS,
                 productStatsWithCartDS,
@@ -257,12 +257,12 @@ public class ProductStatsApp {
                 productStatsWithCommentDS
         );
 
-        // TODO 4 提取时间戳 生成WM
+        // DONE 4 提取时间戳 生成WM
         SingleOutputStreamOperator<ProductStats> productStatsWithWMDS = unionDS.assignTimestampsAndWatermarks(WatermarkStrategy.<ProductStats>forBoundedOutOfOrderness(
                         Duration.ofSeconds(2))
                 .withTimestampAssigner((element, recordTimestamp) -> element.getTs()));
 
-        // TODO 5 分组开窗聚合 按sku_id分组，10s滚窗，结合增量聚合(累加值)和全量聚合(提取窗口信息)
+        // DONE 5 分组开窗聚合 按sku_id分组，10s滚窗，结合增量聚合(累加值)和全量聚合(提取窗口信息)
         SingleOutputStreamOperator<ProductStats> reduceDS = productStatsWithWMDS
                 .keyBy(ProductStats::getSku_id)
                 .window(TumblingEventTimeWindows.of(Time.seconds(10)))
@@ -312,7 +312,7 @@ public class ProductStatsApp {
                     }
                 });
 
-        // TODO 6 关联维度信息
+        // DONE 6 关联维度信息
         // 6.1 关联sku维度,要先关联sku维度
         SingleOutputStreamOperator<ProductStats> productStatsWithSkuDS = AsyncDataStream.unorderedWait(
                 reduceDS,
@@ -388,7 +388,7 @@ public class ProductStatsApp {
                 60L,
                 TimeUnit.SECONDS);
 
-        // TODO 7 将数据写入ClickHouse
+        // DONE 7 将数据写入ClickHouse
         // 25个字段
         productStatsWithCategory3DS.addSink(ClickHouseUtil.getSink(
                 "insert into table product_stats " +

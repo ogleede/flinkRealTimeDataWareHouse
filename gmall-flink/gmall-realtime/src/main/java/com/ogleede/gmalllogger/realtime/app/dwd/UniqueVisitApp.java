@@ -1,4 +1,4 @@
-package com.ogleede.gmalllogger.realtime.app.dwm;
+package com.ogleede.gmalllogger.realtime.app.dwd;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONAware;
@@ -20,13 +20,13 @@ import java.text.SimpleDateFormat;
 /**
  * @author Ogleede
  * @Description
- * //数据流：web/app -> nginx 发送请求-> spring boot 将数据发送到-> kafka(ods) -> flink 消费ods写入 -> kafka(dwd) ->flink -> kafka(dwm)
+ * //数据流：web/app -> nginx 发送请求-> spring boot 将数据发送到-> kafka(ods) -> flink 消费ods写入 -> kafka(dwd) ->flink -> kafka(dwd)
  * //程序 : mocklog -> nginx        -> Logger.sh             ->  kafka(zk)  -> BaseLogApp     -> kafka    -> UniqueVisitApp -> kafka
  * @create 2022-06-04-20:16
  */
 public class UniqueVisitApp {
     public static void main(String[] args) throws Exception {
-        //TODO 1.获取执行环境
+        //DONE 1.获取执行环境
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setParallelism(1);
 
@@ -39,16 +39,16 @@ public class UniqueVisitApp {
         //env.getCheckpointConfig().setMinPauseBetweenCheckpoints(3000);
 
         //env.setRestartStrategy(RestartStrategies.fixedDelayRestart());
-        //TODO 2.读取kafka dwd_page_log主题的数据
+        //DONE 2.读取kafka dwd_page_log主题的数据
         String groupId = "unique_visit_app";
         String sourceTopic = "dwd_page_log";
-        String sinkTopic = "dwm_unique_visit";
+        String sinkTopic = "dwd_unique_visit";
         DataStreamSource<String> kafkaDS = env.addSource(MyKafkaUtil.getKafkaConsumer(sourceTopic, groupId));
 
-        //TODO 3. 将每行数据转换为JSON对象
+        //DONE 3. 将每行数据转换为JSON对象
         SingleOutputStreamOperator<JSONObject> jsonObjDS = kafkaDS.map(JSON::parseObject);
 
-        //TODO 4. 过滤数据 状态编程 只保留每个mid每天第一次登录的数据（先根据mid做keyBy)
+        //DONE 4. 过滤数据 状态编程 只保留每个mid每天第一次登录的数据（先根据mid做keyBy)
         KeyedStream<JSONObject, String> keyedDS = jsonObjDS.keyBy(jsonObj -> jsonObj.getJSONObject("common").getString("mid"));
         SingleOutputStreamOperator<JSONObject> uvDS = keyedDS.filter(new RichFilterFunction<JSONObject>() {
             private ValueState<String> dateState;
@@ -89,7 +89,7 @@ public class UniqueVisitApp {
             }
         });
 
-        //TODO 5. 启动任务
+        //DONE 5. 启动任务
         uvDS.print("uv");
         uvDS.map(JSONAware::toJSONString)
                 .addSink(MyKafkaUtil.getKafkaProducer(sinkTopic));

@@ -1,4 +1,4 @@
-package com.ogleede.gmalllogger.realtime.app.dwm;
+package com.ogleede.gmalllogger.realtime.app.dwd;
 
 /**
  * 有两种方式
@@ -34,7 +34,7 @@ import java.text.SimpleDateFormat;
  */
 
 //数据流： web/app->nginx->SpringBoot->mysql->FlinkApp->Kafka(ods)->FlinkApp->
-// Kafka/HBase(dwd/dim)        ->FlinkApp      ->Kafka(dwm)
+// Kafka/HBase(dwd/dim)        ->FlinkApp      ->Kafka(dwd)
 //程序：   mockDb                    ->mysql->FlinkApp->Kafka(zk)-> BaseDBApp->
 //kafka/phoenix(zk,hdfs,hbase) -> OrderWideApp -> kafka -> PaymentWideAPP -> kafka
 /**
@@ -55,11 +55,11 @@ public class PaymentWideApp {
         //env.getCheckpointConfig().setMinPauseBetweenCheckpoints(3000);
         //env.setRestartStrategy(RestartStrategies.fixedDelayRestart());
 
-        //TODO 1读取Kafka主题的数据，创建流，并转换成JavaBean对象，提取时间戳，生成WM
+        //DONE 1读取Kafka主题的数据，创建流，并转换成JavaBean对象，提取时间戳，生成WM
         String groupId = "payment_wide_group";
         String paymentInfoSourceTopic = "dwd_payment_info";
-        String orderWideSourceTopic = "dwm_order_wide";
-        String paymentWideSinkTopic = "dwm_payment_wide";
+        String orderWideSourceTopic = "dwd_order_wide";
+        String paymentWideSinkTopic = "dwd_payment_wide";
 
         SingleOutputStreamOperator<OrderWide> orderWideDS = env.addSource(MyKafkaUtil.getKafkaConsumer(orderWideSourceTopic, groupId))
                 .map(line -> JSON.parseObject(line, OrderWide.class))
@@ -93,7 +93,7 @@ public class PaymentWideApp {
                             }
                         }));
 
-        //TODO 2 双流join
+        //DONE 2 双流join
         SingleOutputStreamOperator<PaymentWide> paymentWideDS = paymentInfoDS.keyBy(PaymentInfo::getOrder_id)
                 .intervalJoin(orderWideDS.keyBy(OrderWide::getOrder_id))
                 .between(Time.minutes(-15), Time.minutes(0))
@@ -104,7 +104,7 @@ public class PaymentWideApp {
                     }
                 });
 
-        //TODO 3 将数据写入Kafka
+        //DONE 3 将数据写入Kafka
         paymentWideDS.print(">>>>>>>");
         paymentWideDS
                 .map(JSON::toJSONString)
