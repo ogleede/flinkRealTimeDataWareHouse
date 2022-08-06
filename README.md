@@ -2,6 +2,10 @@
 
 
 
+**Github 上面图片没显示出来，目前没找到有效的解决办法，请移步README.PDF文件查看**
+
+
+
 [TOC]
 
 
@@ -18,7 +22,7 @@
 
 ## 项目架构
 
-![实时数仓架构](https://github.com/ogleede/flinkRealTimeDataWareHouse/tree/main/README.assets/实时数仓架构.png)
+![实时数仓架构](./README.assets/实时数仓架构.png)
 
 
 
@@ -229,7 +233,7 @@
 
 - 数据走向
 
-![数据走向](https://github.com/ogleede/flinkRealTimeDataWareHouse/tree/main/README.assets/数据走向.png)
+![数据走向](./README.assets/数据走向.png)
 
 
 
@@ -288,7 +292,7 @@
 >   - 当业务端随着需求变化，增加表时，就需要修改配置重启计算程序。
 >   - 需要实现 **`动态分流`** 功能，将配置信息以`MySQL`表的形式存储起来，利用 `FlinkCDC `去读取这张配置表形成配置流，并将其作为 **`广播流`** 与主流连接。
 >
-> <img src="https://github.com/ogleede/flinkRealTimeDataWareHouse/tree/main/README.assets/image-20220723112455546.png" alt="image-20220723112455546" style="zoom: 60%;" />
+> <img src="./README.assets/image-20220723112455546.png" alt="image-20220723112455546" style="zoom: 60%;" />
 >
 > - 配置表
 >
@@ -404,7 +408,7 @@
 >
 > 
 >
-> <img src="https://github.com/ogleede/flinkRealTimeDataWareHouse/tree/main/README.assets/image-20220723185032242.png" alt="image-20220723185032242" style="zoom:50%;" />
+> <img src="./README.assets/image-20220723185032242.png" alt="image-20220723185032242" style="zoom:50%;" />
 >
 > - 事实数据和事实数据关联：订单表、订单明细表两个流之间的join
 > - 事实数据和维度数据关联：在流计算中查询维表，补充字段。
