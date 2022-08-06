@@ -18,7 +18,7 @@
 
 ## 项目架构
 
-![image-20220722110227010](https://github.com/ogleede/flinkRealTimeDataWareHouse/tree/main/README.assets/image-20220722110227010.png)
+![实时数仓架构](./README.assets/实时数仓架构.png)
 
 
 
@@ -229,7 +229,7 @@
 
 - 数据走向
 
-![image-20220722160443522](https://github.com/ogleede/flinkRealTimeDataWareHouse/tree/main/README.assets/image-20220722160443522-1658649852386.png)
+![数据走向](./README.assets/数据走向.png)
 
 
 
@@ -240,13 +240,10 @@
 | 分层 | 数据描述                                                     | 生成计算工具         | 存储媒介   |
 | ---- | ------------------------------------------------------------ | -------------------- | ---------- |
 | ODS  | 原始数据，日志和业务数据                                     | 日志服务器，FlinkCDC | kafka      |
-| DWD  | 数据分流，订单、页面访问等                                   | Flink                | kafka      |
-| DWM  | 加工数据，独立访问、跳出行为                                 | Flink                | kafka      |
+| DWD  | 数据分流，UV,跳出行为，订单宽表，支付款表                    | Flink                | kafka      |
 | DIM  | 维度数据                                                     | Flink                | HBase      |
 | DWS  | 根据**维度主题**将多个**事实数据轻度聚合**，形成**主题宽表** | Flink                | ClickHouse |
 | ADS  | ClickHouse数据进行筛选聚合。                                 | ClickHouse、SQL      | 可视化展示 |
-
-
 
 
 
@@ -291,7 +288,7 @@
 >   - 当业务端随着需求变化，增加表时，就需要修改配置重启计算程序。
 >   - 需要实现 **`动态分流`** 功能，将配置信息以`MySQL`表的形式存储起来，利用 `FlinkCDC `去读取这张配置表形成配置流，并将其作为 **`广播流`** 与主流连接。
 >
-> <img src="https://github.com/ogleede/flinkRealTimeDataWareHouse/tree/main/README.assets/image-20220723112455546.png" alt="image-20220723112455546" style="zoom: 60%;" />
+> <img src="./README.assets/image-20220723112455546.png" alt="image-20220723112455546" style="zoom: 60%;" />
 >
 > - 配置表
 >
@@ -308,7 +305,7 @@
 >
 >   - 配置表示例
 >
->     - ![image-20220723112909209](README.assets/image-20220723112909209-1658649884490.png)
+>     - ![配置表示例](./README.assets/配置表示例.png)
 >
 >   - 当业务端增加表时，只需要在配置表中增加一条表信息即可。
 >
@@ -407,7 +404,7 @@
 >
 > 
 >
-> <img src="https://github.com/ogleede/flinkRealTimeDataWareHouse/tree/main/README.assets/image-20220723185032242.png" alt="image-20220723185032242" style="zoom:50%;" />
+> <img src="./README.assets/image-20220723185032242.png" alt="image-20220723185032242" style="zoom:50%;" />
 >
 > - 事实数据和事实数据关联：订单表、订单明细表两个流之间的join
 > - 事实数据和维度数据关联：在流计算中查询维表，补充字段。
@@ -476,8 +473,6 @@
 
 ### 访客主题宽表
 
-![image-20220724105333526](https://github.com/ogleede/flinkRealTimeDataWareHouse/tree/main/README.assets/image-20220724105333526-1658649903184.png)
-
 > 这张宽表就是：维度+事实数据
 >
 > - 事实数据：PV，UV，跳出次数，进入页面数(session_count)，连续访问时长
@@ -506,8 +501,6 @@
 
 ### 商品主题宽表
 
-![image-20220724145449600](https://github.com/ogleede/flinkRealTimeDataWareHouse/tree/main/README.assets/image-20220724145449600-1658649907847.png)
-
 > - 事实数据：
 >   - `dwd_page_log `                    pv流  -> 点击 曝光
 >   - `dwd_favor_info`                favor流 -> 收藏
@@ -534,8 +527,6 @@
 
 
 ### 地图主题宽表
-
-![image-20220724145504103](https://github.com/ogleede/flinkRealTimeDataWareHouse/tree/main/README.assets/image-20220724145504103-1658649911800.png)
 
 > 地区主题反映各个地区的销售情况，轻度聚合之后保存。
 
